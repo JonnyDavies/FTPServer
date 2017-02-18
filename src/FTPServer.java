@@ -34,7 +34,7 @@ public class FTPServer extends Thread {
 			}
 		}
 	}
-	
+	 
 
 	private void saveFile(Socket clientSock) throws IOException 
 	{
