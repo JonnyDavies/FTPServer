@@ -5,65 +5,53 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class FTPServer extends Thread {
-	
-	private ServerSocket ss;
-	
-	public FTPServer(int port) 
+		
+    private static final int NTHREADS = 6;
+    private static final Executor exec = Executors.newFixedThreadPool(NTHREADS);    
+    private String started;
+    	
+	public FTPServer() 
 	{
-		try 
-		{
-			ss = new ServerSocket(port);
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
+	      this.started = "done";
 	}
 	
-	public void run() {
-		while (true) 
-		{
-			try 
-			{
-				Socket clientSock = ss.accept();
-				saveFile(clientSock);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	 
+	 public void startListening(int portNumber)
+	 {
+	      boolean listening = true;
 
-	private void saveFile(Socket clientSock) throws IOException 
-	{
-		DataInputStream dis = new DataInputStream(clientSock.getInputStream());
-		FileOutputStream fos = new FileOutputStream("testfile.jpg");
-		
-		byte[] buffer = new byte[4096];
-		
-		int filesize = 136356; // Send file size in separate msg
-		int read = 0;
-		int totalRead = 0;
-		int remaining = filesize;
-		
-		while((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0)
-		{
-			totalRead += read;
-			remaining -= read;
-			System.out.println("read " + totalRead + " bytes.");
-			fos.write(buffer, 0, read);
-		}
-		
-		fos.close();
-		dis.close();
-	}
-	
+	      try (ServerSocket serverSocket = new ServerSocket(portNumber)) 
+	      { 
+	              
+	        while (listening) 
+	        {            
+	           Socket connection = serverSocket.accept();
+	           
+	           FTPHandleRequest ftpr = new FTPHandleRequest(connection);                    
+	         
+	           Runnable task = new Runnable(){
+	             public void run (){
+	            	 ftpr.init();
+	             }
+	           }; 
+
+	           exec.execute(task);                 
+	           	           
+	        }
+	      }        
+	      catch (IOException e) {
+	          System.err.println("Could not listen on port " + portNumber);
+	          System.exit(-1);
+	      }
+	 }
+	 
 	public static void main(String[] args) 
 	{
-		FTPServer fs = new FTPServer(4446);
-		fs.start();
+		FTPServer fs = new FTPServer();
+		fs.startListening(4446);        
 	}
 
 }
