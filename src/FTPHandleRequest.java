@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -157,6 +158,7 @@ public class FTPHandleRequest
 
 	    		int ch;	                
 	            String temp;
+	            
 	                
 	                do
 	                {
@@ -168,7 +170,7 @@ public class FTPHandleRequest
 	                    {
 	                        this.fos.write(ch);                    
 	                    }
-	                    
+                   
 	                }
 	                while(ch!=-1);
 	                
@@ -189,7 +191,13 @@ public class FTPHandleRequest
 				String file = this.dis.readUTF();
 				FileInputStream fis = new FileInputStream("C:\\Users\\Jonny\\Desktop\\RemoteFiles\\" + file);	
 			
+				
 				this.dos.writeUTF("READY");
+				
+				// send file size for progress bar
+		        File f = new File("C:\\Users\\Jonny\\Desktop\\RemoteFiles\\" + file);	
+		        this.dos.writeLong(f.length());
+		        
 
 			    int ch;
 	            
